@@ -26,10 +26,13 @@ services:
     volumes:
       - vllm_cache:/root/.cache/huggingface
     command: >
-      --model TinyLlama/TinyLlama-1.1B-Chat-v1.0
+      --model Qwen/Qwen2.5-1.5B-Instruct
       --dtype float16
-      --max-model-len 2048
-      --gpu-memory-utilization 0.9
+      --max-model-len 4096
+      --gpu-memory-utilization 0.7
+    depends_on:
+      indexer:
+        condition: service_completed_successfully
     networks:
       - rag-network
     deploy:
@@ -44,19 +47,20 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 120s
+      start_period: 300s
 
-  # Document Indexer (runs once to index PDFs)
+  # Document Indexer (runs once to index job offers from France Travail API)
   indexer:
     build:
       context: ./indexer
       dockerfile: Dockerfile
     container_name: indexer
-    volumes:
-      - ./dataset:/data:ro
     environment:
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
+      - FRANCE_TRAVAIL_CLIENT_ID=${FRANCE_TRAVAIL_CLIENT_ID}
+      - FRANCE_TRAVAIL_CLIENT_SECRET=${FRANCE_TRAVAIL_CLIENT_SECRET}
+      - MAX_JOB_OFFERS=500
     depends_on:
       qdrant:
         condition: service_healthy
@@ -79,8 +83,6 @@ services:
       - VLLM_PORT=8000
     depends_on:
       qdrant:
-        condition: service_healthy
-      vllm:
         condition: service_healthy
       indexer:
         condition: service_completed_successfully
