@@ -11,7 +11,7 @@ QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 VLLM_HOST = os.getenv("VLLM_HOST", "vllm")
 VLLM_PORT = int(os.getenv("VLLM_PORT", "8000"))
-COLLECTION_NAME = "pdf_documents"
+COLLECTION_NAME = "job_offers"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 TOP_K = 3 
 
@@ -124,13 +124,15 @@ async def query(request: QueryRequest):
         
         for idx, result in enumerate(search_results):
             chunk_text = result.payload.get("text", "")
-            filename = result.payload.get("filename", "unknown")
+            intitule = result.payload.get("intitule", "unknown")
+            entreprise = result.payload.get("entreprise", "Non spécifié")
             chunk_id = result.payload.get("chunk_id", 0)
             score = result.score
             
-            context_parts.append(f"[Document {idx+1}: {filename}, Chunk {chunk_id}]\n{chunk_text}")
+            context_parts.append(f"[Document {idx+1}: {intitule}, Chunk {chunk_id}]\n{chunk_text}")
             sources.append({
-                "filename": filename,
+                "intitule": intitule,
+                "entreprise": entreprise,
                 "chunk_id": chunk_id,
                 "score": float(score),
                 "text": chunk_text[:200] + "..." if len(chunk_text) > 200 else chunk_text
@@ -139,24 +141,27 @@ async def query(request: QueryRequest):
         context = "\n\n".join(context_parts)
         
         # Create prompt for vLLM
-        prompt = f"""You are a helpful assistant that answers questions based on the provided context from PDF documents.
+        prompt = f"""Tu es un assistant utile qui répond aux questions en se basant sur le contexte fourni provenant des offres d'emploi.
 
-Context from documents:
+Contexte des offres d'emploi :
 {context}
 
-Question: {request.question}
+Question : {request.question}
 
-Instructions:
-- Answer the question based ONLY on the information provided in the context above
-- If the context doesn't contain enough information to answer the question, say so
-- Be concise and accurate
-- Cite which document(s) you're using in your answer
+Instructions :
+- Liste TOUTES les offres mentionnées dans le contexte ci-dessus, sans exception
+- Pour chaque offre, indique l'intitulé exact, l'entreprise et le lieu
+- Ne saute aucune offre présente dans le contexte
+- Si tu listes des offres, assure-toi de mentionner TOUTES celles présentes dans le contexte
+- Sois concis et précis
+- Ne mens pas et n'invente pas d'informations qui ne sont pas dans le contexte
+- Formate ta réponse en Markdown : utilise **gras** pour les titres importants, des listes numérotées (1., 2., 3.) ou à puces (-) pour les éléments, et des sauts de ligne pour la lisibilité
 
-Answer:"""
+Réponse :"""
         
         # Query vLLM
         completion = vllm_client.chat.completions.create(
-            model="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+            model="Qwen/Qwen2.5-1.5B-Instruct",
             messages=[
                 {"role": "user", "content": prompt}
             ],
