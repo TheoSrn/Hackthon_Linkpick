@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF RAG Query System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .query-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .question-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .top-k-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .top-k-input {
+            width: 70px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .submit-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .answer-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .answer-box h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .answer-box h3::before {
+            content: "";
+            font-size: 1.3em;
+        }
+
+        .answer-text {
+            line-height: 1.6;
+            color: #444;
+            white-space: pre-wrap;
+        }
+
+        .sources-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sources-section h3::before {
+            content: "";
+            font-size: 1.3em;
+        }
+
+        .source-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .source-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .source-filename {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .source-score {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+
+        .source-text {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+
+        .error-box {
+            background: #fee;
+            border-left: 4px solid #f44;
+            padding: 20px;
+            border-radius: 8px;
+            color: #c33;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PDF RAG Query System</h1>
+            <p>Ask questions about your PDF documents</p>
+        </div>
+
+        <div class="main-card">
+            <div class="stats-bar" id="statsBar">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalChunks">-</div>
+                    <div class="stat-label">Indexed Chunks</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="systemStatus">-</div>
+                    <div class="stat-label">System Status</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="vectorSize">-</div>
+                    <div class="stat-label">Vector Size</div>
+                </div>
+            </div>
+
+            <div class="query-section">
+                <div class="input-group">
+                    <label>Search Mode:</label>
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="llm">With LLM</button>
+                        <button class="mode-btn" data-mode="keyword">Keywords Only</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="question" id="inputLabel">Your Question:</label>
+                    <textarea 
+                        id="question" 
+                        class="question-input" 
+                        rows="3" 
+                        placeholder="e.g., What are the main topics discussed in the documents?"
+                    ></textarea>
+                </div>
+
+                <div class="controls">
+                    <div class="top-k-control">
+                        <label for="topK">Top K:</label>
+                        <input type="number" id="topK" class="top-k-input" value="3" min="1" max="5">
+                    </div>
+                    <button id="submitBtn" class="submit-btn">Ask Question</button>
+                </div>
+            </div>
+
+            <div id="loadingSection" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Processing your question...</p>
+            </div>
+
+            <div id="resultsSection" class="results-section">
+                <div class="answer-box" id="answerBox">
+                    <h3>Answer</h3>
+                    <div id="answerText" class="answer-text"></div>
+                </div>
+
+                <div class="sources-section">
+                    <h3>Sources</h3>
+                    <div id="sourcesContainer"></div>
+                </div>
+            </div>
+
+            <div id="errorSection" class="hidden">
+                <div class="error-box">
+                    <strong>Error:</strong> <span id="errorText"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8001' 
+            : 'http://localhost:8001';
+
+        let searchMode = 'llm'; // 'llm' or 'keyword'
+
+        // Mode selector
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                searchMode = this.dataset.mode;
+                
+                // Update UI based on mode
+                const inputLabel = document.getElementById('inputLabel');
+                const submitBtn = document.getElementById('submitBtn');
+                const questionInput = document.getElementById('question');
+                
+                if (searchMode === 'keyword') {
+                    inputLabel.textContent = 'Keywords:';
+                    submitBtn.textContent = 'Search';
+                    questionInput.placeholder = 'e.g., machine learning, neural networks, deep learning';
+                } else {
+                    inputLabel.textContent = 'Your Question:';
+                    submitBtn.textContent = 'Ask Question';
+                    questionInput.placeholder = 'e.g., What are the main topics discussed in the documents?';
+                }
+            });
+        });
+
+        // Load stats on page load
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats`);
+                const data = await response.json();
+                
+                document.getElementById('totalChunks').textContent = data.total_chunks || '-';
+                document.getElementById('vectorSize').textContent = data.vector_size || '-';
+                document.getElementById('systemStatus').textContent = 'OK';
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('systemStatus').textContent = 'Error';
+            }
+        }
+
+        async function submitQuestion() {
+            const question = document.getElementById('question').value.trim();
+            const topK = parseInt(document.getElementById('topK').value);
+
+            if (!question) {
+                alert(searchMode === 'keyword' ? 'Please enter keywords' : 'Please enter a question');
+                return;
+            }
+
+            // Hide previous results and errors
+            document.getElementById('resultsSection').classList.remove('show');
+            document.getElementById('errorSection').classList.add('hidden');
+            
+            // Show loading
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('submitBtn').disabled = true;
+
+            try {
+                let endpoint, requestBody;
+                
+                if (searchMode === 'keyword') {
+                    endpoint = `${API_BASE_URL}/search`;
+                    requestBody = {
+                        keywords: question,
+                        top_k: topK
+                    };
+                } else {
+                    endpoint = `${API_BASE_URL}/query`;
+                    requestBody = {
+                        question: question,
+                        top_k: topK
+                    };
+                }
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display answer (only for LLM mode)
+                const answerBox = document.getElementById('answerBox');
+                if (searchMode === 'llm' && data.answer) {
+                    answerBox.style.display = 'block';
+                    document.getElementById('answerText').textContent = data.answer;
+                } else {
+                    answerBox.style.display = 'none';
+                }
+
+                // Display sources
+                const sourcesContainer = document.getElementById('sourcesContainer');
+                sourcesContainer.innerHTML = '';
+
+                data.sources.forEach((source, index) => {
+                    const sourceCard = document.createElement('div');
+                    sourceCard.className = 'source-card';
+                    sourceCard.innerHTML = `
+                        <div class="source-header">
+                            <span class="source-filename">${source.filename} (Chunk ${source.chunk_id})</span>
+                            <span class="source-score">Score: ${(source.score * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="source-text">${source.text}</div>
+                    `;
+                    sourcesContainer.appendChild(sourceCard);
+                });
+
+                // Show results
+                document.getElementById('resultsSection').classList.add('show');
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('errorText').textContent = error.message;
+                document.getElementById('errorSection').classList.remove('hidden');
+            } finally {
+                // Hide loading
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+
+        // Event listeners
+        document.getElementById('submitBtn').addEventListener('click', submitQuestion);
+        document.getElementById('question').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitQuestion();
+            }
+        });
+
+        // Load stats on page load
+        loadStats();
+    </script>
+</body>
+</html>
