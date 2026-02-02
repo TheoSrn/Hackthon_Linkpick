@@ -1,4 +1,4 @@
-pypdf2
+requests
 qdrant-client
 sentence-transformers
 torch
