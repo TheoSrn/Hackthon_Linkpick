@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF RAG Query System</title>
+    <title>Système de Recherche d'Offres d'Emploi</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -108,32 +109,6 @@
             flex-wrap: wrap;
         }
 
-        .mode-selector {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .mode-btn {
-            padding: 10px 20px;
-            border: 2px solid #667eea;
-            background: white;
-            color: #667eea;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-
-        .mode-btn.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .mode-btn:hover {
-            transform: translateY(-2px);
-        }
-
         .top-k-control {
             display: flex;
             align-items: center;
@@ -211,33 +186,40 @@
         .answer-box h3 {
             color: #333;
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .answer-box h3::before {
-            content: "";
-            font-size: 1.3em;
         }
 
         .answer-text {
             line-height: 1.6;
             color: #444;
-            white-space: pre-wrap;
+        }
+
+        .answer-text h1, .answer-text h2, .answer-text h3 {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .answer-text ul, .answer-text ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .answer-text li {
+            margin-bottom: 5px;
+        }
+
+        .answer-text strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .answer-text p {
+            margin-bottom: 10px;
         }
 
         .sources-section h3 {
             color: #333;
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sources-section h3::before {
-            content: "";
-            font-size: 1.3em;
         }
 
         .source-card {
@@ -296,74 +278,66 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>PDF RAG Query System</h1>
-            <p>Ask questions about your PDF documents</p>
+            <h1>Recherche d'Offres d'Emploi</h1>
+            <p>Posez vos questions sur les offres d'emploi disponibles</p>
         </div>
 
         <div class="main-card">
             <div class="stats-bar" id="statsBar">
                 <div class="stat-item">
                     <div class="stat-value" id="totalChunks">-</div>
-                    <div class="stat-label">Indexed Chunks</div>
+                    <div class="stat-label">Offres Indexées</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="systemStatus">-</div>
-                    <div class="stat-label">System Status</div>
+                    <div class="stat-label">État du Système</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="vectorSize">-</div>
-                    <div class="stat-label">Vector Size</div>
+                    <div class="stat-label">Taille des Vecteurs</div>
                 </div>
             </div>
 
             <div class="query-section">
                 <div class="input-group">
-                    <label>Search Mode:</label>
-                    <div class="mode-selector">
-                        <button class="mode-btn active" data-mode="llm">With LLM</button>
-                        <button class="mode-btn" data-mode="keyword">Keywords Only</button>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="question" id="inputLabel">Your Question:</label>
+                    <label for="question">Votre Question :</label>
                     <textarea 
                         id="question" 
                         class="question-input" 
                         rows="3" 
-                        placeholder="e.g., What are the main topics discussed in the documents?"
+                        placeholder="Par exemple : Quelles sont les offres pour développeur Python à Paris ?"
                     ></textarea>
                 </div>
 
                 <div class="controls">
                     <div class="top-k-control">
-                        <label for="topK">Top K:</label>
-                        <input type="number" id="topK" class="top-k-input" value="3" min="1" max="5">
+                        <label for="topK">Nombre de résultats :</label>
+                        <input type="number" id="topK" class="top-k-input" value="3" min="1" max="10">
                     </div>
-                    <button id="submitBtn" class="submit-btn">Ask Question</button>
+                    <button id="submitBtn" class="submit-btn">Rechercher</button>
                 </div>
             </div>
 
             <div id="loadingSection" class="loading hidden">
                 <div class="spinner"></div>
-                <p>Processing your question...</p>
+                <p>Traitement de votre question...</p>
             </div>
 
             <div id="resultsSection" class="results-section">
-                <div class="answer-box" id="answerBox">
-                    <h3>Answer</h3>
+                <div class="answer-box">
+                    <h3>Réponse</h3>
                     <div id="answerText" class="answer-text"></div>
                 </div>
 
                 <div class="sources-section">
-                    <h3>Sources</h3>
+                    <h3>Offres Correspondantes</h3>
                     <div id="sourcesContainer"></div>
                 </div>
             </div>
 
             <div id="errorSection" class="hidden">
                 <div class="error-box">
-                    <strong>Error:</strong> <span id="errorText"></span>
+                    <strong>Erreur :</strong> <span id="errorText"></span>
                 </div>
             </div>
         </div>
@@ -374,33 +348,7 @@
             ? 'http://localhost:8001' 
             : 'http://localhost:8001';
 
-        let searchMode = 'llm'; // 'llm' or 'keyword'
-
-        // Mode selector
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                searchMode = this.dataset.mode;
-                
-                // Update UI based on mode
-                const inputLabel = document.getElementById('inputLabel');
-                const submitBtn = document.getElementById('submitBtn');
-                const questionInput = document.getElementById('question');
-                
-                if (searchMode === 'keyword') {
-                    inputLabel.textContent = 'Keywords:';
-                    submitBtn.textContent = 'Search';
-                    questionInput.placeholder = 'e.g., machine learning, neural networks, deep learning';
-                } else {
-                    inputLabel.textContent = 'Your Question:';
-                    submitBtn.textContent = 'Ask Question';
-                    questionInput.placeholder = 'e.g., What are the main topics discussed in the documents?';
-                }
-            });
-        });
-
-        // Load stats on page load
+        // Charger les statistiques au chargement de la page
         async function loadStats() {
             try {
                 const response = await fetch(`${API_BASE_URL}/stats`);
@@ -408,10 +356,10 @@
                 
                 document.getElementById('totalChunks').textContent = data.total_chunks || '-';
                 document.getElementById('vectorSize').textContent = data.vector_size || '-';
-                document.getElementById('systemStatus').textContent = 'OK';
+                document.getElementById('systemStatus').textContent = '✓ OK';
             } catch (error) {
-                console.error('Error loading stats:', error);
-                document.getElementById('systemStatus').textContent = 'Error';
+                console.error('Erreur lors du chargement des statistiques:', error);
+                document.getElementById('systemStatus').textContent = '✗ Erreur';
             }
         }
 
@@ -420,68 +368,59 @@
             const topK = parseInt(document.getElementById('topK').value);
 
             if (!question) {
-                alert(searchMode === 'keyword' ? 'Please enter keywords' : 'Please enter a question');
+                alert('Veuillez entrer une question');
                 return;
             }
 
-            // Hide previous results and errors
+            // Masquer les résultats et erreurs précédents
             document.getElementById('resultsSection').classList.remove('show');
             document.getElementById('errorSection').classList.add('hidden');
             
-            // Show loading
+            // Afficher le chargement
             document.getElementById('loadingSection').classList.remove('hidden');
             document.getElementById('submitBtn').disabled = true;
 
             try {
-                let endpoint, requestBody;
-                
-                if (searchMode === 'keyword') {
-                    endpoint = `${API_BASE_URL}/search`;
-                    requestBody = {
-                        keywords: question,
-                        top_k: topK
-                    };
-                } else {
-                    endpoint = `${API_BASE_URL}/query`;
-                    requestBody = {
-                        question: question,
-                        top_k: topK
-                    };
-                }
-
-                const response = await fetch(endpoint, {
+                const response = await fetch(`${API_BASE_URL}/query`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify({
+                        question: question,
+                        top_k: topK
+                    })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`Erreur HTTP ! statut: ${response.status}`);
                 }
 
                 const data = await response.json();
 
-                // Display answer (only for LLM mode)
-                const answerBox = document.getElementById('answerBox');
-                if (searchMode === 'llm' && data.answer) {
-                    answerBox.style.display = 'block';
-                    document.getElementById('answerText').textContent = data.answer;
-                } else {
-                    answerBox.style.display = 'none';
-                }
+                // Configurer marked pour un rendu correct
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true
+                });
 
-                // Display sources
+                // Afficher la réponse avec support markdown
+                const answerElement = document.getElementById('answerText');
+                answerElement.innerHTML = marked.parse(data.answer);
+
+                // Afficher les sources
                 const sourcesContainer = document.getElementById('sourcesContainer');
                 sourcesContainer.innerHTML = '';
 
                 data.sources.forEach((source, index) => {
                     const sourceCard = document.createElement('div');
                     sourceCard.className = 'source-card';
+                    const displayName = source.intitule && source.entreprise 
+                        ? `${source.intitule} - ${source.entreprise}` 
+                        : (source.intitule || 'Sans titre');
                     sourceCard.innerHTML = `
                         <div class="source-header">
-                            <span class="source-filename">${source.filename} (Chunk ${source.chunk_id})</span>
+                            <span class="source-filename">${displayName}</span>
                             <span class="source-score">Score: ${(source.score * 100).toFixed(1)}%</span>
                         </div>
                         <div class="source-text">${source.text}</div>
@@ -489,21 +428,21 @@
                     sourcesContainer.appendChild(sourceCard);
                 });
 
-                // Show results
+                // Afficher les résultats
                 document.getElementById('resultsSection').classList.add('show');
 
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Erreur:', error);
                 document.getElementById('errorText').textContent = error.message;
                 document.getElementById('errorSection').classList.remove('hidden');
             } finally {
-                // Hide loading
+                // Masquer le chargement
                 document.getElementById('loadingSection').classList.add('hidden');
                 document.getElementById('submitBtn').disabled = false;
             }
         }
 
-        // Event listeners
+        // Écouteurs d'événements
         document.getElementById('submitBtn').addEventListener('click', submitQuestion);
         document.getElementById('question').addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -512,7 +451,7 @@
             }
         });
 
-        // Load stats on page load
+        // Charger les statistiques au chargement de la page
         loadStats();
     </script>
 </body>
