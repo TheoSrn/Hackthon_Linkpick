@@ -1,24 +1,28 @@
-from fastapi import FastAPI, HTTPException
+"""Application FastAPI principale avec les routes."""
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from qdrant_client import QdrantClient
-from sentence_transformers import SentenceTransformer
-import os
-from openai import OpenAI
 
-# Configuration
-QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
-QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
-VLLM_HOST = os.getenv("VLLM_HOST", "vllm")
-VLLM_PORT = int(os.getenv("VLLM_PORT", "8000"))
-COLLECTION_NAME = "job_offers"
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-TOP_K = 3 
+from app.models import (
+    QueryRequest, QueryResponse,
+    KeywordSearchRequest, KeywordSearchResponse,
+    CVAnalysisResponse
+)
+from app.config import COLLECTION_NAME, TOP_K
+from app.services.qdrant_service import (
+    initialize_qdrant_client,
+    initialize_embedding_model,
+    get_qdrant_client,
+    search_similar_documents,
+    get_collection_stats
+)
+from app.services.llm_service import initialize_vllm_client, generate_completion
+from app.services.cv_service import process_cv_for_job_matching
 
-# Initialize FastAPI
+
+# Initialiser FastAPI
 app = FastAPI(title="RAG API", version="1.0.0")
 
-# CORS middleware
+# Middleware CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,98 +31,66 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global variables for clients
-qdrant_client = None
-embedding_model = None
-vllm_client = None
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize clients on startup."""
-    global qdrant_client, embedding_model, vllm_client
-    
-    # Initialize Qdrant client
-    qdrant_client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
-    print(f"Connected to Qdrant at {QDRANT_HOST}:{QDRANT_PORT}")
-    
-    # Load embedding model
-    embedding_model = SentenceTransformer(EMBEDDING_MODEL)
-    print(f"Loaded embedding model: {EMBEDDING_MODEL}")
-    
-    # Initialize vLLM client
-    vllm_client = OpenAI(
-        api_key="EMPTY",
-        base_url=f"http://{VLLM_HOST}:{VLLM_PORT}/v1"
-    )
-    print(f"Connected to vLLM at {VLLM_HOST}:{VLLM_PORT}")
+    """Initialiser les clients au démarrage."""
+    initialize_qdrant_client()
+    initialize_embedding_model()
+    initialize_vllm_client()
 
-class QueryRequest(BaseModel):
-    question: str
-    top_k: int = TOP_K
-
-class KeywordSearchRequest(BaseModel):
-    keywords: str
-    top_k: int = TOP_K
-
-class QueryResponse(BaseModel):
-    answer: str
-    sources: list[dict]
-
-class KeywordSearchResponse(BaseModel):
-    sources: list[dict]
 
 @app.get("/")
 async def root():
-    """Health check endpoint."""
+    """Endpoint de vérification de santé."""
     return {"status": "healthy", "service": "RAG API"}
+
 
 @app.get("/health")
 async def health():
-    """Detailed health check."""
+    """Vérification détaillée de santé."""
     try:
-        # Check Qdrant
+        # Vérifier Qdrant
+        qdrant_client = get_qdrant_client()
         collections = qdrant_client.get_collections()
         qdrant_status = "healthy"
     except Exception as e:
         qdrant_status = f"unhealthy: {str(e)}"
     
     try:
-        # Check vLLM
+        # Vérifier vLLM
+        from app.services.llm_service import get_vllm_client
+        vllm_client = get_vllm_client()
         models = vllm_client.models.list()
         vllm_status = "healthy"
     except Exception as e:
         vllm_status = f"unhealthy: {str(e)}"
     
+    from app.config import EMBEDDING_MODEL
     return {
         "qdrant": qdrant_status,
         "vllm": vllm_status,
         "embedding_model": EMBEDDING_MODEL
     }
 
+
 @app.post("/query", response_model=QueryResponse)
 async def query(request: QueryRequest):
     """
-    Query the RAG system with a question.
+    Interroger le système RAG avec une question.
     
-    1. Embed the question
-    2. Search for relevant chunks in Qdrant
-    3. Feed chunks to vLLM for answer generation
+    1. Générer l'embedding de la question
+    2. Rechercher les chunks pertinents dans Qdrant
+    3. Envoyer les chunks à vLLM pour générer la réponse
     """
     try:
-        # Generate embedding for the question
-        question_embedding = embedding_model.encode(request.question).tolist()
-        
-        # Search for relevant chunks using query method
-        search_results = qdrant_client.query_points(
-            collection_name=COLLECTION_NAME,
-            query=question_embedding,
-            limit=request.top_k
-        ).points
+        # Rechercher les chunks pertinents
+        search_results = search_similar_documents(request.question, request.top_k)
         
         if not search_results:
             raise HTTPException(status_code=404, detail="No relevant documents found")
         
-        # Prepare context from retrieved chunks
+        # Préparer le contexte à partir des chunks récupérés
         context_parts = []
         sources = []
         
@@ -159,17 +131,8 @@ Instructions :
 
 Réponse :"""
         
-        # Query vLLM
-        completion = vllm_client.chat.completions.create(
-            model="Qwen/Qwen2.5-1.5B-Instruct",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=500
-        )
-        
-        answer = completion.choices[0].message.content
+        # Generate answer
+        answer = generate_completion(prompt, temperature=0.7, max_tokens=500)
         
         return QueryResponse(
             answer=answer,
@@ -181,6 +144,7 @@ Réponse :"""
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
+
 @app.post("/search", response_model=KeywordSearchResponse)
 async def keyword_search(request: KeywordSearchRequest):
     """
@@ -191,15 +155,8 @@ async def keyword_search(request: KeywordSearchRequest):
     3. Return the top K results
     """
     try:
-        # Generate embedding for the keywords
-        keywords_embedding = embedding_model.encode(request.keywords).tolist()
-        
-        # Search for relevant chunks using query method
-        search_results = qdrant_client.query_points(
-            collection_name=COLLECTION_NAME,
-            query=keywords_embedding,
-            limit=request.top_k
-        ).points
+        # Search for relevant chunks
+        search_results = search_similar_documents(request.keywords, request.top_k)
         
         if not search_results:
             raise HTTPException(status_code=404, detail="No relevant documents found")
@@ -227,18 +184,40 @@ async def keyword_search(request: KeywordSearchRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
+
 @app.get("/stats")
 async def get_stats():
     """Get statistics about the indexed documents."""
     try:
-        collection_info = qdrant_client.get_collection(COLLECTION_NAME)
-        return {
-            "collection_name": COLLECTION_NAME,
-            "total_chunks": collection_info.points_count,
-            "vector_size": collection_info.config.params.vectors.size
-        }
+        return get_collection_stats()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting stats: {str(e)}")
+
+
+@app.post("/upload-cv", response_model=CVAnalysisResponse)
+async def upload_cv(file: UploadFile = File(...), top_k: int = 10):
+    """
+    Upload a CV (PDF or DOCX) and get matching job offers from France Travail API.
+    
+    1. Extract text from the CV
+    2. Analyze the CV to extract keywords and profile
+    3. Query France Travail API for matching jobs
+    4. Return detailed matching offers with application information
+    """
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Process CV and get matching jobs
+        result = process_cv_for_job_matching(file_content, file.filename, top_k)
+        
+        return CVAnalysisResponse(**result)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing CV: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn

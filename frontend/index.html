@@ -104,6 +104,13 @@
             font-weight: 800;
             line-height: 1.2;
         }
+        
+        .subtitle {
+            font-size: 1.3em;
+            color: #0060f9;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
 
         .header h1 .highlight {
             background: #0060f9;
@@ -460,6 +467,249 @@
         .hidden {
             display: none;
         }
+        
+        .cv-upload-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 3px solid #d0e2ff;
+        }
+        
+        .cv-upload-area {
+            background: linear-gradient(135deg, #f8fbff 0%, #eef3fe 100%);
+            border: 3px dashed #0060f9;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .cv-upload-area:hover {
+            background: linear-gradient(135deg, #eef3fe 0%, #e0edff 100%);
+            border-color: #004ac1;
+            transform: translateY(-2px);
+        }
+        
+        .cv-upload-area.drag-over {
+            background: #d0e2ff;
+            border-color: #0060f9;
+            border-style: solid;
+        }
+        
+        .cv-upload-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        
+        .cv-upload-text {
+            font-size: 1.1em;
+            color: #152652;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .cv-upload-hint {
+            font-size: 0.95em;
+            color: #5d75a8;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .selected-file {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 2px solid #0060f9;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .selected-file.show {
+            display: flex;
+        }
+        
+        .file-icon {
+            font-size: 1.5em;
+        }
+        
+        .file-info {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .file-name {
+            font-weight: 700;
+            color: #152652;
+            margin-bottom: 5px;
+        }
+        
+        .file-size {
+            font-size: 0.9em;
+            color: #5d75a8;
+        }
+        
+        .remove-file-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .remove-file-btn:hover {
+            background: #dc2626;
+        }
+        
+        .cv-results-section {
+            display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        .cv-results-section.show {
+            display: block;
+        }
+        
+        .profile-summary-box {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-left: 5px solid #10b981;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+        }
+        
+        .profile-summary-box h3 {
+            color: #065f46;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            font-weight: 800;
+        }
+        
+        .profile-summary-text {
+            color: #047857;
+            line-height: 1.7;
+            font-size: 1.05em;
+        }
+        
+        .offer-card {
+            background: white;
+            border: 2px solid #e8f0fe;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.4s;
+            position: relative;
+        }
+        
+        .offer-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #0060f9;
+            transform: scaleY(0);
+            transition: transform 0.4s;
+        }
+        
+        .offer-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 96, 249, 0.15);
+            border-color: #0060f9;
+        }
+        
+        .offer-card:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .offer-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e8f0fe;
+        }
+        
+        .offer-title {
+            font-size: 1.3em;
+            font-weight: 800;
+            color: #152652;
+            margin-bottom: 8px;
+        }
+        
+        .offer-company {
+            font-size: 1.05em;
+            color: #0060f9;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .offer-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .offer-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+            color: #5d75a8;
+        }
+        
+        .offer-description {
+            color: #5d75a8;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        
+        .offer-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .apply-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .apply-btn:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .apply-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .match-score {
+            background: linear-gradient(135deg, #0060f9, #3170d6);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: 700;
+        }
 
         .footer {
             text-align: center;
@@ -498,8 +748,8 @@
     <section class="hero-section">
         <div class="container">
             <div class="header">
-                <h1>Trouver <span class="highlight">une alternance</span><br>c'est bien, créer du lien<br>c'est <span class="highlight">mieux</span> !</h1>
-                <p>Rejoins un réseau d'entreprises et d'écoles qui facilitent l'alternance et la recherche d'alternances et de stages.</p>
+                <h1>Trouver <span class="highlight">une alternance ou un stage</span><br>c'est bien, créer du lien<br>c'est <span class="highlight">mieux</span> !</h1>
+                <p>Rejoins un réseau d'entreprises et d'écoles qui facilitent la recherche d'alternances et de stages.</p>
             </div>
 
             <div class="main-card">
@@ -538,6 +788,36 @@
                     </div>
                 </div>
 
+                <!-- CV Upload Section -->
+                <div class="cv-upload-section">
+                    <h2 class="subtitle">📄 Ou uploadez votre CV pour des recommandations personnalisées</h2>
+                    
+                    <div class="cv-upload-area" id="cvUploadArea">
+                        <div class="cv-upload-icon">📤</div>
+                        <div class="cv-upload-text">Glissez votre CV ici ou cliquez pour sélectionner</div>
+                        <div class="cv-upload-hint">Formats acceptés : PDF, DOCX (Max 5 MB)</div>
+                    </div>
+                    
+                    <input type="file" id="cvFileInput" class="file-input" accept=".pdf,.doc,.docx">
+                    
+                    <div class="selected-file" id="selectedFile">
+                        <span class="file-icon">📄</span>
+                        <div class="file-info">
+                            <div class="file-name" id="fileName"></div>
+                            <div class="file-size" id="fileSize"></div>
+                        </div>
+                        <button class="remove-file-btn" id="removeFileBtn">✕ Supprimer</button>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="top-k-control">
+                            <label for="cvTopK">Offres à afficher :</label>
+                            <input type="number" id="cvTopK" class="top-k-input" value="5" min="1" max="10">
+                        </div>
+                        <button id="analyzeCvBtn" class="submit-btn" disabled>Analyser mon CV et trouver des offres</button>
+                    </div>
+                </div>
+
             <div id="loadingSection" class="loading hidden">
                 <div class="spinner"></div>
                 <p>Traitement de votre question...</p>
@@ -559,6 +839,24 @@
                 <div class="error-box">
                     <strong>Une erreur est survenue</strong>
                     <span id="errorText"></span>
+                </div>
+            </div>
+            
+            <!-- CV Analysis Results -->
+            <div id="cvResultsSection" class="cv-results-section">
+                <div class="profile-summary-box">
+                    <h3>Votre Profil :</h3>
+                    <div id="profileSummary" class="profile-summary-text"></div>
+                </div>
+                
+                <div class="answer-box">
+                    <h3>Analyse de correspondance :</h3>
+                    <div id="cvAnalysisText" class="answer-text"></div>
+                </div>
+
+                <div class="sources-section">
+                    <h3>Offres recommandées pour vous :</h3>
+                    <div id="cvOffersContainer"></div>
                 </div>
             </div>
         </div>
@@ -673,6 +971,163 @@
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 submitQuestion();
+            }
+        });
+
+        // CV Upload functionality
+        let selectedFile = null;
+        const cvUploadArea = document.getElementById('cvUploadArea');
+        const cvFileInput = document.getElementById('cvFileInput');
+        const selectedFileDiv = document.getElementById('selectedFile');
+        const analyzeCvBtn = document.getElementById('analyzeCvBtn');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+
+        // Click to upload
+        cvUploadArea.addEventListener('click', () => {
+            cvFileInput.click();
+        });
+
+        // File selection
+        cvFileInput.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files[0]);
+        });
+
+        // Drag and drop
+        cvUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            cvUploadArea.classList.add('drag-over');
+        });
+
+        cvUploadArea.addEventListener('dragleave', () => {
+            cvUploadArea.classList.remove('drag-over');
+        });
+
+        cvUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            cvUploadArea.classList.remove('drag-over');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+
+        // Remove file
+        removeFileBtn.addEventListener('click', () => {
+            selectedFile = null;
+            cvFileInput.value = '';
+            selectedFileDiv.classList.remove('show');
+            analyzeCvBtn.disabled = true;
+        });
+
+        function handleFileSelect(file) {
+            if (!file) return;
+
+            // Check file type
+            const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx)$/i)) {
+                alert('Format de fichier non supporté. Veuillez uploader un PDF ou DOCX.');
+                return;
+            }
+
+            // Check file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Le fichier est trop volumineux. Taille maximale : 5 MB');
+                return;
+            }
+
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+            selectedFileDiv.classList.add('show');
+            analyzeCvBtn.disabled = false;
+        }
+
+        // Analyze CV
+        analyzeCvBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                alert('Veuillez sélectionner un CV');
+                return;
+            }
+
+            // Hide previous results
+            document.getElementById('resultsSection').classList.remove('show');
+            document.getElementById('cvResultsSection').classList.remove('show');
+            document.getElementById('errorSection').classList.add('hidden');
+
+            // Show loading
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.querySelector('#loadingSection p').textContent = 'Analyse de votre CV en cours...';
+            analyzeCvBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                
+                const topK = parseInt(document.getElementById('cvTopK').value);
+
+                const response = await fetch(`${API_BASE_URL}/upload-cv?top_k=${topK}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `Erreur HTTP ! statut: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Configure marked
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true
+                });
+
+                // Display profile summary
+                document.getElementById('profileSummary').textContent = data.profile_summary;
+
+                // Display analysis
+                document.getElementById('cvAnalysisText').innerHTML = marked.parse(data.analysis);
+
+                // Display matching offers
+                const cvOffersContainer = document.getElementById('cvOffersContainer');
+                cvOffersContainer.innerHTML = '';
+
+                data.matching_offers.forEach((offer, index) => {
+                    const offerCard = document.createElement('div');
+                    offerCard.className = 'offer-card';
+                    
+                    const applyButton = offer.url_postuler 
+                        ? `<a href="${offer.url_postuler}" target="_blank" class="apply-btn">📝 Postuler</a>`
+                        : `<button class="apply-btn" disabled>URL non disponible</button>`;
+                    
+                    offerCard.innerHTML = `
+                        <div class="offer-header">
+                            <div class="offer-title">${offer.intitule}</div>
+                            <div class="offer-company">🏢 ${offer.entreprise}</div>
+                            <div class="offer-meta">
+                                <span class="offer-meta-item">📍 ${offer.lieu}</span>
+                                <span class="offer-meta-item">📋 ${offer.type_contrat}</span>
+                                ${offer.date_creation ? `<span class="offer-meta-item">📅 ${new Date(offer.date_creation).toLocaleDateString('fr-FR')}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="offer-description">${offer.description}</div>
+                        <div class="offer-actions">
+                            ${applyButton}
+                            <span class="match-score">Correspondance: ${(offer.score * 100).toFixed(1)}%</span>
+                        </div>
+                    `;
+                    cvOffersContainer.appendChild(offerCard);
+                });
+
+                // Show results
+                document.getElementById('cvResultsSection').classList.add('show');
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('errorText').textContent = error.message;
+                document.getElementById('errorSection').classList.remove('hidden');
+            } finally {
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.querySelector('#loadingSection p').textContent = 'Traitement de votre question...';
+                analyzeCvBtn.disabled = false;
             }
         });
 

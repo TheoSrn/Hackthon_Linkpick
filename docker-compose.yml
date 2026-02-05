@@ -81,6 +81,8 @@ services:
       - QDRANT_PORT=6333
       - VLLM_HOST=vllm
       - VLLM_PORT=8000
+      - FRANCE_TRAVAIL_CLIENT_ID=${FRANCE_TRAVAIL_CLIENT_ID}
+      - FRANCE_TRAVAIL_CLIENT_SECRET=${FRANCE_TRAVAIL_CLIENT_SECRET}
     depends_on:
       qdrant:
         condition: service_healthy

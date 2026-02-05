@@ -6,3 +6,7 @@ torch
 openai
 python-dotenv
 pydantic
+python-multipart
+PyPDF2
+python-docx
+requests
